@@ -1,25 +1,32 @@
-export const dynamic = "force-dynamic";
+"use client";
 
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Image from "next/image";
-import { notFound } from "next/navigation";
 
-export default async function ProductDetails({ params }) {
-  const { id } = params;
+export default function ProductDetails() {
+  const { id } = useParams();
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!id) return notFound();
+  useEffect(() => {
+    if (!id) return;
+    const fetchProduct = async () => {
+      try {
+        const res = await fetch(`https://fakestoreapi.com/products/${id}`);
+        const data = await res.json();
+        setProduct(data);
+      } catch (error) {
+        console.error("Error fetching product:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProduct();
+  }, [id]);
 
-  const res = await fetch(`https://fakestoreapi.com/products/${id}`);
-
-  if (!res.ok) return notFound();
-
-  let product;
-  try {
-    product = await res.json();
-  } catch (e) {
-    return notFound();
-  }
-
-  if (!product || !product.title) return notFound();
+  if (loading) return <p className="text-center mt-10">Loading product...</p>;
+  if (!product) return <p className="text-center mt-10 text-red-600">Product not found.</p>;
 
   return (
     <div className="max-w-3xl mx-auto mt-12 bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
